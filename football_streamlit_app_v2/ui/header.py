@@ -7,7 +7,7 @@ from src.theme import INLAB_BLUE, FG_MUTED, LOGOS_PATH
 # =========================================================
 # LOGO (usa el path robusto del theme)
 # =========================================================
-LOGO_PATH = LOGOS_PATH / "logo-claro.png"  # asegurate que el nombre sea EXACTO
+LOGO_PATH = LOGOS_PATH / "logo-inlab.png"  # asegurate que el nombre sea EXACTO
 
 # =========================================================
 # HEADER
