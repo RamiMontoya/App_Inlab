@@ -1,10 +1,11 @@
 import streamlit as st
 from pathlib import Path
 
-from src.theme import INLAB_BLUE, FG_MUTED, LOGOS_PATH
 
+from src.theme import LOGOS_PATH, INLAB_BLUE, FG_MUTED
 
-LOGO_PATH = LOGOS_PATH / "logo-claro.png"
+LOGO_PATH = LOGOS_PATH / "inlab_logo.png"
+
 # =========================================================
 # ASSETS
 # =========================================================
