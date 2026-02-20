@@ -1,16 +1,13 @@
+# ui/header.py
 import streamlit as st
 from pathlib import Path
 
-
-from src.theme import LOGOS_PATH, INLAB_BLUE, FG_MUTED
-
-LOGO_PATH = LOGOS_PATH / "inlab_logo.png"
+from src.theme import INLAB_BLUE, FG_MUTED, LOGOS_PATH
 
 # =========================================================
-# ASSETS
+# LOGO (usa el path robusto del theme)
 # =========================================================
-BASE_PATH = Path(__file__).resolve().parent.parent
-LOGO_PATH = BASE_PATH / "assets" / "logos" / "logo-inlab.png"
+LOGO_PATH = LOGOS_PATH / "logo-claro.png"  # asegurate que el nombre sea EXACTO
 
 # =========================================================
 # HEADER
@@ -24,7 +21,11 @@ def render_header(
 
     with col_logo:
         if LOGO_PATH.exists():
+            # Streamlit mantiene proporción automáticamente con width
             st.image(str(LOGO_PATH), width=480)
+        else:
+            # Debug rápido (podés borrarlo luego)
+            st.caption(f"Logo no encontrado: {LOGO_PATH}")
 
     with col_title:
         st.markdown(
