@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-
+from src.theme import LOGOS_PATH
 from src.theme import inject_streamlit_theme
 from ui.header import render_header
 
@@ -10,7 +10,8 @@ from ui.header import render_header
 # PAGE CONFIG (SIEMPRE PRIMERO Y UNA SOLA VEZ)
 # =========================================================
 BASE_PATH = Path(__file__).resolve().parent
-FAVICON_PATH = BASE_PATH / "assets" / "logos" / "logo-claro.png"
+
+FAVICON_PATH = LOGOS_PATH / "logo-claro.png"
 
 st.set_page_config(
     page_title="InLab Data Hub",
