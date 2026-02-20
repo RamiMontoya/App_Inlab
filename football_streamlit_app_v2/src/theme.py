@@ -8,14 +8,31 @@ import matplotlib as mpl
 import matplotlib.font_manager as fm
 from matplotlib.font_manager import FontProperties
 
-# =========================================================
-# PATHS
-# =========================================================
-BASE_PATH = Path(__file__).resolve().parent.parent
-ASSETS_PATH = BASE_PATH / "assets"
-FONTS_PATH = ASSETS_PATH / "fonts"
-LOGOS_PATH = ASSETS_PATH / "logos"
 
+# =========================================================
+# PATHS (robusto para macOS/Windows + Streamlit Cloud Linux)
+# =========================================================
+from pathlib import Path
+
+BASE_PATH = Path(__file__).resolve().parent.parent
+
+def _pick_dir(base: Path, preferred: str):
+    """
+    Devuelve el directorio correcto aunque el repo tenga 'Assets' o 'assets'.
+    En Linux (Cloud) es case-sensitive, así que esto evita que rompa.
+    """
+    cand = base / preferred
+    if cand.exists():
+        return cand
+    # fallback: busca por nombre sin distinguir mayúsculas/minúsculas
+    for p in base.iterdir():
+        if p.is_dir() and p.name.lower() == preferred.lower():
+            return p
+    return cand  # devuelve el preferido aunque no exista (para debug)
+
+ASSETS_PATH = _pick_dir(BASE_PATH, "Assets")   # 👈 tu repo real
+FONTS_PATH  = ASSETS_PATH / "fonts"
+LOGOS_PATH  = ASSETS_PATH / "logos"
 # =========================================================
 # COLORES INSTITUCIONALES
 # =========================================================
