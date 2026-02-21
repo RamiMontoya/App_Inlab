@@ -606,16 +606,23 @@ with st.expander("📡 Scatter", expanded=True):
 
 # =========================================================
 # 🕸 RADAR (MÉTRICAS EN FORM, COLORES REACTIVOS, CÁLCULO SOLO BOTÓN)
+# + EXPORT PNG TRANSPARENTE (apaga el Rectangle de fondo de radar.py)
 # =========================================================
 with st.expander("🕸 Radar", expanded=True):
 
+    import matplotlib.patches as mpatches
+
+    ss = st.session_state  # alias cómodo
+
     # --- init state ---
-    if "radar_figs" not in st.session_state:
-        st.session_state.radar_figs = {}
-    if "radar_last_inputs" not in st.session_state:
-        st.session_state.radar_last_inputs = None
-    if "radar_go" not in st.session_state:
-        st.session_state.radar_go = False
+    if "radar_figs" not in ss:
+        ss.radar_figs = {}
+    if "radar_last_inputs" not in ss:
+        ss.radar_last_inputs = None
+    if "radar_go" not in ss:
+        ss.radar_go = False
+    if "radar_metrics_applied" not in ss:
+        ss.radar_metrics_applied = None
 
     # -----------------------------
     # 1) MÉTRICAS (NO “REACCIONAN” HASTA APLICAR)
@@ -628,12 +635,10 @@ with st.expander("🕸 Radar", expanded=True):
         )
         apply_metrics = st.form_submit_button("✅ Aplicar métricas")
 
-    # Si aplicó métricas, guardamos un “snapshot” para usarlo en el cálculo
     if apply_metrics:
-        st.session_state["radar_metrics_applied"] = list(metricas_radar)
+        ss.radar_metrics_applied = list(metricas_radar)
 
-    # Usamos métricas aplicadas (si no hay, usamos lo actual del widget como fallback)
-    metricas_aplicadas = st.session_state.get("radar_metrics_applied", list(metricas_radar))
+    metricas_aplicadas = ss.radar_metrics_applied if ss.radar_metrics_applied is not None else list(metricas_radar)
 
     # -----------------------------
     # 2) UI REACTIVA (fuera del form)
@@ -670,7 +675,7 @@ with st.expander("🕸 Radar", expanded=True):
                 st.color_picker(
                     j,
                     value=base[i % len(base)],
-                    key=f"radar_color_{j}_{i}",  # key única estable
+                    key=f"radar_color_{j}_{i}",
                 )
             )
 
@@ -690,12 +695,12 @@ with st.expander("🕸 Radar", expanded=True):
     # 3) BOTÓN (dispara el cálculo)
     # -----------------------------
     if st.button("🕸 Graficar Radar", key="run_radar_btn"):
-        st.session_state.radar_go = True
+        ss.radar_go = True
 
     # -----------------------------
     # 4) CÁLCULO (solo si botón + inputs cambiaron)
     # -----------------------------
-    if st.session_state.radar_go:
+    if ss.radar_go:
 
         if not metricas_aplicadas:
             st.warning("Seleccioná métricas y presioná **Aplicar métricas**.")
@@ -712,9 +717,9 @@ with st.expander("🕸 Radar", expanded=True):
                 "n_rows": int(len(df_filtrado)),
             }
 
-            if radar_inputs != st.session_state.radar_last_inputs:
-                st.session_state.radar_last_inputs = radar_inputs
-                st.session_state.radar_figs = {}
+            if radar_inputs != ss.radar_last_inputs:
+                ss.radar_last_inputs = radar_inputs
+                ss.radar_figs = {}
 
                 with st.spinner("Generando Radares…"):
 
@@ -727,7 +732,7 @@ with st.expander("🕸 Radar", expanded=True):
                             colores_jugadores=colores_radar,
                             color_referencia=color_ref,
                         )
-                        st.session_state.radar_figs["radar_general"] = fig
+                        ss.radar_figs["radar_general"] = fig
 
                     elif modo_export == "Jugadores individuales":
                         for j, c in zip(jugadores_radar, colores_radar):
@@ -737,7 +742,7 @@ with st.expander("🕸 Radar", expanded=True):
                                 metricas=metricas_aplicadas,
                                 colores_jugadores=[c],
                             )
-                            st.session_state.radar_figs[j] = fig
+                            ss.radar_figs[j] = fig
 
                     elif modo_export == "Jugador vs referencia":
                         for j, c in zip(jugadores_radar, colores_radar):
@@ -749,7 +754,7 @@ with st.expander("🕸 Radar", expanded=True):
                                 colores_jugadores=[c],
                                 color_referencia=color_ref,
                             )
-                            st.session_state.radar_figs[f"{j}_vs_ref"] = fig
+                            ss.radar_figs[f"{j}_vs_ref"] = fig
 
                     elif modo_export == "Primero vs resto":
                         base_j = jugadores_radar[0]
@@ -761,7 +766,7 @@ with st.expander("🕸 Radar", expanded=True):
                                 metricas=metricas_aplicadas,
                                 colores_jugadores=[base_c, c],
                             )
-                            st.session_state.radar_figs[f"{base_j}_vs_{j}"] = fig
+                            ss.radar_figs[f"{base_j}_vs_{j}"] = fig
 
                     elif modo_export == "Todas las combinaciones":
                         for i in range(len(jugadores_radar)):
@@ -774,35 +779,98 @@ with st.expander("🕸 Radar", expanded=True):
                                     metricas=metricas_aplicadas,
                                     colores_jugadores=[c1_, c2_],
                                 )
-                                st.session_state.radar_figs[f"{j1}_vs_{j2}"] = fig
+                                ss.radar_figs[f"{j1}_vs_{j2}"] = fig
 
         # IMPORTANTÍSIMO: apagar flag para no recalcular en reruns
-        st.session_state.radar_go = False
+        ss.radar_go = False
 
-    # -----------------------------
-    # 5) RENDER + EXPORT (NO REGENERA)
-    # -----------------------------
-    if st.session_state.radar_figs:
-        st.markdown("### 📊 Radares generados")
-        for nombre, fig in st.session_state.radar_figs.items():
-            show_fig(fig)
+# -----------------------------
+# 5) RENDER + EXPORT (NO REGENERA)
+# -----------------------------
+if st.session_state.radar_figs:
+    st.markdown("### 📊 Radares generados")
+    for nombre, fig in st.session_state.radar_figs.items():
+        show_fig(fig)
 
-        st.markdown("### ⬇️ Exportar Radar")
-        for nombre, fig in st.session_state.radar_figs.items():
+    st.markdown("### ⬇️ Exportar Radar")
+    for nombre, fig in st.session_state.radar_figs.items():
+
+        # ===== FIX TRANSPARENCIA REAL (oculta el Rectangle BG del radar.py) =====
+        from matplotlib.patches import Rectangle
+        from matplotlib.colors import to_rgba
+
+        bg_rgba = to_rgba(BG_DARK)
+
+        # Guardamos estado original para restaurar después
+        _orig = {
+            "fig_facecolor": fig.get_facecolor(),
+            "fig_alpha": fig.patch.get_alpha(),
+        }
+
+        hidden_rects = []
+        try:
+            # 1) hacemos patch del figure transparente
+            fig.patch.set_facecolor("none")
+            fig.patch.set_alpha(0.0)
+
+            # 2) ocultamos el rectángulo de fondo (0,0)-(1,1) en coords de figura
+            for r in fig.findobj(Rectangle):
+                try:
+                    x, y = r.get_xy()
+                    w, h = r.get_width(), r.get_height()
+                    fc = r.get_facecolor()
+
+                    is_full_fig = (abs(x) < 1e-9 and abs(y) < 1e-9 and abs(w - 1) < 1e-9 and abs(h - 1) < 1e-9)
+                    is_bg_color = (fc is not None and tuple(fc) == tuple(bg_rgba))
+                    is_bg_z = (r.get_zorder() <= -50)
+
+                    if is_full_fig and is_bg_color and is_bg_z:
+                        hidden_rects.append((r, r.get_visible()))
+                        r.set_visible(False)
+                except Exception:
+                    pass
+
+            # 3) axes transparentes (por si alguno mete facecolor)
+            for ax in getattr(fig, "axes", []):
+                try:
+                    ax.set_facecolor("none")
+                    if hasattr(ax, "patch") and ax.patch is not None:
+                        ax.patch.set_alpha(0.0)
+                except Exception:
+                    pass
+
             buf = io.BytesIO()
             fig.savefig(
                 buf,
                 format="png",
                 dpi=300,
                 transparent=True,
+                facecolor="none",
+                edgecolor="none",
                 bbox_inches="tight",
+                pad_inches=0.05,
             )
             buf.seek(0)
 
-            st.download_button(
-                label=f"⬇️ Descargar – {nombre}",
-                data=buf,
-                file_name=(f"radar_{nombre}.png".replace(" ", "_").replace("/", "-")),
-                mime="image/png",
-                key=f"dl_radar_{nombre}",
-            )
+        finally:
+            # Restaurar para que el preview siga perfecto
+            try:
+                fig.patch.set_facecolor(_orig["fig_facecolor"])
+                fig.patch.set_alpha(_orig["fig_alpha"])
+            except Exception:
+                pass
+
+            for r, was_visible in hidden_rects:
+                try:
+                    r.set_visible(was_visible)
+                except Exception:
+                    pass
+        # ======================================================================
+
+        st.download_button(
+            label=f"⬇️ Descargar – {nombre}",
+            data=buf,
+            file_name=(f"radar_{nombre}.png".replace(" ", "_").replace("/", "-")),
+            mime="image/png",
+            key=f"dl_radar_{nombre}",
+        )
